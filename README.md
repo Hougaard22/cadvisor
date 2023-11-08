@@ -1,6 +1,8 @@
 # cadvisor
 cAdvisor docker image with multi-arch support
 
+Based on the official Google cAdvisor: [https://github.com/google/cadvisor](google/cadvisor)
+
 # Docker Compose
 
 ```yml
