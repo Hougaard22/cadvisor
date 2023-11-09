@@ -3,28 +3,26 @@ source .env
 
 docker build . --platform linux/arm64 -t "cadvisor:arm64"
 docker build . --platform linux/amd64 -t "cadvisor:amd64"
+docker build . --platform linux/arm/v7 -t "cadvisor:armv7"
+docker build . --platform linux/arm/v6 -t "cadvisor:armv6"
 
-for arch in amd64 arm64; do
- docker tag "cadvisor:${arch}" "hougaard/cadvisor:${arch}"
- docker push "hougaard/cadvisor:${arch}"
+for ARCH in amd64 arm64 armv6 armv7; do
+ docker tag "cadvisor:${ARCH}" "hougaard/cadvisor:v0.48.1-${ARCH}"
+ docker push "hougaard/cadvisor:v0.48.1-${ARCH}"
 done
 
-docker manifest rm "hougaard/cadvisor:latest"
-docker manifest create "hougaard/cadvisor:latest" \
-    "hougaard/cadvisor:amd64" \
-    "hougaard/cadvisor:arm64"
-# Annotate manifest
-docker manifest annotate --arch arm64 --os linux "hougaard/cadvisor:latest" "hougaard/cadvisor:arm64"
-docker manifest annotate --arch amd64 --os linux "hougaard/cadvisor:latest" "hougaard/cadvisor:amd64"
-#docker manifest inspect "hougaard/cadvisor:latest"
-docker manifest push "hougaard/cadvisor:latest"
-
-docker manifest rm "hougaard/cadvisor:${CADVISOR_VERSION}"
-docker manifest create "hougaard/cadvisor:${CADVISOR_VERSION}" \
-    "hougaard/cadvisor:amd64"  \
-    "hougaard/cadvisor:arm64"
-# Annotate manifest
-docker manifest annotate --arch arm64 --os linux "hougaard/cadvisor:${CADVISOR_VERSION}" "hougaard/cadvisor:arm64"
-docker manifest annotate --arch amd64 --os linux "hougaard/cadvisor:${CADVISOR_VERSION}" "hougaard/cadvisor:amd64"
-#docker manifest inspect "hougaard/cadvisor:${CADVISOR_VERSION}"
-docker manifest push "hougaard/cadvisor:${CADVISOR_VERSION}"
+for TAG in "$CADVISOR_VERSION" "lastest"; do
+    docker manifest rm "hougaard/cadvisor:$TAG"
+    docker manifest create "hougaard/cadvisor:$TAG" \
+        "hougaard/cadvisor:$CADVISOR_VERSION-amd64" \
+        "hougaard/cadvisor:$CADVISOR_VERSION-arm64" \
+        "hougaard/cadvisor:$CADVISOR_VERSION-armv7" \
+        "hougaard/cadvisor:$CADVISOR_VERSION-armv6"
+    # Annotate manifest
+    docker manifest annotate --arch arm64 --os linux "hougaard/cadvisor:latest" "hougaard/cadvisor:$CADVISOR_VERSION-arm64"
+    docker manifest annotate --arch amd64 --os linux "hougaard/cadvisor:latest" "hougaard/cadvisor:$CADVISOR_VERSION-amd64"
+    docker manifest annotate --arch arm --variant v7 --os linux "hougaard/cadvisor:latest" "hougaard/cadvisor:$CADVISOR_VERSION-armv7"
+    docker manifest annotate --arch arm --variant v6 --os linux "hougaard/cadvisor:latest" "hougaard/cadvisor:$CADVISOR_VERSION-armv6"
+    #docker manifest inspect "hougaard/cadvisor:latest"
+    docker manifest push "hougaard/cadvisor:$TAG"
+done
